@@ -1,13 +1,29 @@
 import { useEffect, useRef, useState } from "react";
 
 const App = () => {
-  const [clientMessages, setClientMessages] = useState(["Client Side"]);
-  const [serverMessages, setServerMessages] = useState(["Server Side"]);
+  const [messages, setMessages] = useState(["Hello how are you"]);
   const wsRef = useRef();
   const inputRef = useRef();
 
+  const handleClickButton = () => {
+    const message = inputRef.current?.value?.trim();
+    wsRef.current.send(
+      JSON.stringify({
+        type: "chat",
+        payload: {
+          message: message,
+        },
+      })
+    );
+    inputRef.current.value = "";
+  };
+
   useEffect(() => {
     const ws = new WebSocket("ws://localhost:8080");
+    ws.onmessage = (event) => {
+      setMessages((m) => [...m, event.data]);
+    };
+    wsRef.current = ws;
 
     ws.onopen = () => {
       ws.send(
@@ -19,56 +35,15 @@ const App = () => {
         })
       );
     };
-
-    ws.onmessage = (event) => {
-      // push server message into serverMessages
-      setServerMessages((prev) => [...prev, event.data]);
-    };
-    wsRef.current = ws;
   }, []);
-
-  const sendMessage = () => {
-    const message = inputRef.current?.value?.trim();
-    if (!message) return;
-
-    // show locally as client message
-    setClientMessages((prev) => [...prev, message]);
-
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-      wsRef.current.send(
-        JSON.stringify({
-          type: "chat",
-          payload: {
-            message: message,
-          },
-        })
-      );
-    } else {
-      console.warn("WebSocket is not open. Message not sent to server.");
-    }
-
-    // clear input
-    inputRef.current.value = "";
-  };
 
   return (
     <div className="h-screen bg-black flex flex-col text-white">
       {/* Messages area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {/* client side  */}
-        {clientMessages.map((clientMessage, i) => (
+        {messages.map((message, i) => (
           <div
             className="bg-blue-600 max-w-xs px-4 py-2 rounded-xl ml-auto"
-            key={i}
-          >
-            {clientMessage}
-          </div>
-        ))}
-
-        {/* server side  */}
-        {serverMessages.map((message, i) => (
-          <div
-            className="bg-gray-700 max-w-xs px-4 py-2 rounded-xl mr-auto"
             key={i}
           >
             {message}
@@ -84,12 +59,14 @@ const App = () => {
           type="text"
           placeholder="Type a message..."
           onKeyDown={(e) => {
-            if (e.key === "Enter") sendMessage();
+            if (e.key === "Enter") {
+              handleClickButton();
+            }
           }}
         />
 
         <button
-          onClick={sendMessage}
+          onClick={handleClickButton}
           className="bg-blue-600 px-5 rounded-r-lg hover:bg-blue-700"
         >
           Send
