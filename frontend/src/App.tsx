@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 import { useEffect, useRef, useState } from 'react'
 import './App.css'
 
@@ -7,7 +8,7 @@ function App() {
 
   function sendMessage() {
     if (!socket) {
-      return;vdf
+      return;
     }
     const message = inputRef.current.value;
     //@ts-ignore
