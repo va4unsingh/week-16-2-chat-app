@@ -7,7 +7,7 @@ const App = () => {
   const inputRef = useRef();
 
   useEffect(() => {
-    const ws = new WebSocket("ws://localhost:8080");
+    const ws = new WebSocket("://localhost:8080");
 
     ws.onopen = () => {
       ws.send(
